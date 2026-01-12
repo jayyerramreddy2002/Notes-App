@@ -1,30 +1,47 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const app = express();
 
-const noteRoutes = require("./routes/noteRoutes");
-
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use("/api/notes", noteRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Backend is running");
+// MongoDB Connection
+let isConnected = false;
+
+const connectDB = async () => {
+  if (isConnected) {
+    console.log('Using existing MongoDB connection');
+    return;
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    isConnected = true;
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.send('XXX');
 });
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(console.error);
+// API Routes - Connect to DB before handling requests
+app.use('/api/notes', async (req, res, next) => {
+  await connectDB();
+  next();
+}, require('./routes/noteRoutes'));
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
-}
-
-// Export for Vercel
+// REMOVE app.listen() - Vercel handles this
+// Export the app for Vercel
 module.exports = app;
