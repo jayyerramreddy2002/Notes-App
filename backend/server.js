@@ -5,11 +5,12 @@ const cors = require("cors");
 
 const app = express();
 
-const noteRoutes=require("./routes/noteRoutes");
+const noteRoutes = require("./routes/noteRoutes");
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/notes", noteRoutes);
+
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
@@ -19,5 +20,11 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch(console.error);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+}
+
+// Export for Vercel
+module.exports = app;
